@@ -1,0 +1,51 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/main.css">
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/colResizable-1.3.min.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
+<script type="text/javascript" src="js/core.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
+<script type="text/javascript">
+	$(function() {
+		$(".list_table").colResizable({
+			liveDrag : true,
+			gripInnerHtml : "<div class='grip'></div>",
+			draggingClass : "dragging",
+			minWidth : 30
+		});
+
+	});
+</script>
+<title>Document</title>
+</head>
+<body>
+	<div class="container">
+		<div id="button" class="mt10">
+			<input type="button" name="button" class="btn btn82 btn_export"
+				value="导出">
+		</div>
+		<div id="search_bar" class="mt10">
+			<div id="table" class="mt10">
+				<div class="box span10 oh" id="tableDiv">
+					<table id="tbody" width="100%" border="0" cellpadding="0" cellspacing="0" class="list_table">
+						<tr>
+							<th width="25%">ID</th>
+							<th width="25%">支付宝账号</th>
+							<th width="25%">支付宝账户开户姓名</th>
+							<th width="25%">支付宝预留手机号</th>
+							<th width="25%">每次签到获得集分宝</th>
+							<th width="25%">签到时间</th>
+							</tr>
+					</table>
+
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

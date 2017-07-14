@@ -1,0 +1,571 @@
+var billData;
+/**
+ * 加载订单查询
+ */
+function loadOrderList() {
+	// 当前位置设定
+	$("#current_func").text("订单查询");
+	document.getElementById("main").innerHTML="<iframe name=\"right\" id=\"rightMain\" src=\"" + getLocationUrl()+"/admin/adminOrderSearch/Index.json\" frameborder=\"no\" scrolling=\"auto\" width=\"100%\" height=\"auto\" allowtransparency=\"true\"></iframe>";
+}
+
+/**
+ * 加载订单查询
+ */
+function loadMuOrderList() {
+	// 当前位置设定
+	$("#current_func").text("东航订单查询");
+	document.getElementById("main").innerHTML="<iframe name=\"right\" id=\"rightMain\" src=\"" + getLocationUrl()+"/admin/adminOrderSearch/MuIndex.json\" frameborder=\"no\" scrolling=\"auto\" width=\"100%\" height=\"auto\" allowtransparency=\"true\"></iframe>";
+}
+
+/**
+ * 加载ATM订单查询
+ */
+function loadATMOrderList() {
+	// 当前位置设定
+	$("#current_func").text("订单查询");
+	document.getElementById("main").innerHTML="<iframe name=\"right\" id=\"rightMain\" src=\"" + getLocationUrl()+"/admin/adminOrderSearch/ATMIndex.json\" frameborder=\"no\" scrolling=\"auto\" width=\"100%\" height=\"auto\" allowtransparency=\"true\"></iframe>";
+}
+
+/**
+ * 加载退保退款
+ */
+function loadCancelOrder() {
+	// 当前位置设定
+	$("#current_func").text("东航退保退款");
+	document.getElementById("main").innerHTML="<iframe name=\"right\" id=\"rightMain\" src=\"" + getLocationUrl()+"/admin/adminOrderSearch/CancelOrder.json\" frameborder=\"no\" scrolling=\"auto\" width=\"100%\" height=\"auto\" allowtransparency=\"true\"></iframe>";
+}
+/**
+ *订单查询
+ */
+function orderSearch() {
+	callSvr("adminOrderSearch/OrderSearch",$("#orderSearch").formToJson(),function(data) {
+		if(null != data.err && data.err == 9){
+			Dialog.alert("提示：您没有登录或登录已超时！",function(){parent.location.href = "/Admin/login.html";});
+		}else{
+				var table = new StringBuffer();
+				table.append("<table id='data' border='0' cellpadding='0' cellspacing='0' class='list_table1'>");
+				table.append("<tr><th width='6%'>姓名</th><th width='10%'>身份证号</th><th width='7%'>手机号</th>");
+				table.append("<th width='8%'>商户订单号</th><th width='8%'>支付流水号</th><th width='8%'>保单号</th>");
+				table.append("<th width='8%'>保单开始时间</th><th width='8%'>保单结束时间</th><th width='14%'>订单商品</th>");
+				table.append("<th width='5%'>保费</th><th width='7%'>下单时间</th><th width='8%'>订单来源</th><th width='8%'>状态</th></tr>");
+				if (data != null && typeof (data) != "undefined") {
+					billData=data;
+					for (var i = 0; i < data.length; i++) {
+						if(i==9){
+							break;
+						}
+						table.append("<tr class=\"tr\"><tD>");
+						table.append(data[i].NAME);
+						table.append("</td><tD>");
+						table.append(data[i].CER_NO);
+						table.append("</td><tD>");
+						table.append(data[i].MOBILE_NO);
+						table.append("</td><tD>");
+						table.append(data[i].ORDER_NUMBER);
+						table.append("</td><tD>");
+						table.append(data[i].PAYMENT_TRANS_NO.substring(0,14)+"<br>"+data[i].PAYMENT_TRANS_NO.substring(14,28));
+						table.append("</td><tD>");
+						table.append(data[i].POLICY_NO);
+						table.append("</td><tD>");
+						if(data[i].POLICY_START_DATE!=null&&data[i].POLICY_START_DATE!="")
+							table.append(data[i].POLICY_START_DATE);
+						else
+							table.append(data[i].FLIGHT_DATE);
+						table.append("</td><tD>");
+						if(data[i].POLICY_END_DATE!=null&&data[i].POLICY_END_DATE!="")
+							table.append(data[i].POLICY_END_DATE);
+						else
+							table.append(data[i].FLIGHT_NUMBER);
+						table.append("</td><tD>");
+						table.append(data[i].PRODUCT_TITLE);
+						table.append("</td><tD>");
+						table.append(data[i].AMOUNT);
+						table.append("</td><tD>");
+						table.append(data[i].CREATE_DATE.substring(0,10)+"<br>"+data[i].CREATE_DATE.substring(10,19));
+						table.append("</td><tD>");
+						// 订单来源
+						if(1 == data[i].ORDER_TYPE) {
+							// 微信
+							table.append("微信");
+						} else if(2 == data[i].ORDER_TYPE) {
+							// 支付宝
+							table.append("支付宝");
+						} else if(3 == data[i].ORDER_TYPE) {
+							// ATM机
+							table.append("ATM机");
+						} else if(0 == data[i].ORDER_TYPE) {
+							// 移动端
+							table.append("移动端");
+						}else if(5 == data[i].ORDER_TYPE) {
+							// 东航PC端
+							table.append("东航PC端");
+						}else if(6 == data[i].ORDER_TYPE) {
+							// 东航H5端
+							table.append("东航H5端");
+						}
+						
+						table.append("</td><tD>");
+						if(billData[i].POLICY_NO !=""){
+							if(billData[i].STATE == 140){
+								table.append("已退款");
+							}else if(billData[i].STATE == 150){
+								table.append("已退保");
+							}else{
+								table.append("已承保");
+							}
+						}else{
+							if(billData[i].STATE == 110){
+								table.append("已支付");
+							}else if(billData[i].STATE == 100){
+								table.append("未支付");
+							}else if(billData[i].STATE == 120){
+								table.append("投保失败");
+							}else{
+								table.append("");
+							}
+						}
+						table.append("</td></tr>");
+					}
+					table.append("</table>");
+					table.append("<div class=\"page mt10\"><div class=\"pagination\"><ul>");
+					table.append("<li class=\"disabled\"><a href=\"#\" onclick=\"orderSearchflip(0);return false;\">首页</a></li>");
+					table.append("<li class=\"disabled\"><span>上一页</span></li>");
+					if(billData.length <= 10){
+						table.append("<li class=\"disabled\"><span>下一页</span></li>");
+					} else{
+			            table.append("<li><a href=\"#\" onclick=\"orderSearchflip(1);return false;\">下一页</a></li>"); 
+					}
+		            table.append("<li class=\"disabled\"><span>共"+billData.length+"条记录</span></li></ul></div>");
+		            var tableHTML = table.toString();
+					document.getElementById("tableDiv").innerHTML = tableHTML;
+				}
+		}
+	});
+}
+
+/**
+ * 订单查询
+ */
+function billSearch(){
+	orderSearch();
+}
+
+function muOrderInquiry(){
+	var muForm = document.getElementById("muSearch");
+	muForm.action = "admin/adminOrderSearch/MuSearch.json";
+	muForm.submit();
+}
+
+function ATMOrderInquiry(){
+	var muForm = document.getElementById("muSearch");
+	muForm.action = "admin/adminOrderSearch/ATMOrderSearch.json";
+	muForm.submit();
+}
+/**
+ * 退款
+ */
+function drawback(orderNo){
+	callSvr("MUOrderHandle/refund",{"orderNo":orderNo},function(data) {
+		if(null != data.err){
+			if(data.err == 9){
+				Dialog.alert("提示：您没有登录或登录已超时！",function(){parent.location.href = "/Admin/login.html";});
+			}else if(data.err == 0){
+				Dialog.alert("提示：退款请求发送成功！",function(){muOrderInquiry();});
+			}else if(data.err == 1){
+				Dialog.alert("提示：退款的订单数据不存在！");
+			}else if(data.err == 2){
+				Dialog.alert("提示：退款失败，退款请求异常！");
+			}else if(data.err == 3){
+				Dialog.alert("提示：退款失败，订单数据状态异常！");
+			}else if(data.err == 4){
+				Dialog.alert("提示：退款失败！");
+			}else if(data.err == 6){
+				Dialog.alert("提示：退款失败，该订单已被退款！");
+			}else if(data.err == 5){
+				Dialog.alert("提示：退款失败，订单数据异常");
+			}else{
+				Dialog.alert("提示："+data.err);
+			}
+		}else{
+			Dialog.alert("提示：退款操作异常！");
+		}
+	});
+}
+
+
+/**
+ * 退保
+ */
+function surrender(orderNo){
+	callSvr("MUOrderHandle/surrender",{"orderNo":orderNo},function(data) {
+		if(null != data.err){
+			if(data.err == 9){
+				Dialog.alert("提示：您没有登录或登录已超时！",function(){parent.location.href = "/Admin/login.html";});
+			}else if(data.err == 0){
+				Dialog.alert("提示：退保成功！",function(){muOrderInquiry();});
+			}else if(data.err == 7){
+				Dialog.alert("提示：退保请求发送成功！");
+			}else if(data.err == 1){
+				Dialog.alert("提示：退保的订单数据不存在！");
+			}else if(data.err == 2){
+				Dialog.alert("提示：退保失败，退保请求异常！");
+			}else if(data.err == 3){
+				Dialog.alert("提示：退保失败，订单数据状态异常！");
+			}else if(data.err == 4){
+				Dialog.alert("提示：退保失败！");
+			}else if(data.err == 6){
+				Dialog.alert("提示：退保失败，该订单已被退保！");
+			}else{
+				Dialog.alert("提示：退保失败，订单数据状态异常！");
+			}
+		}else{
+			Dialog.alert("提示：退保操作异常！");
+		}
+	});
+}
+
+/**
+ * 订单查询翻页操作
+ */
+function orderSearchflip(page){
+	var table = new StringBuffer();
+	table.append("<table id='data' width='100%' border='0' cellpadding='0' cellspacing='0' class='list_table1'>");
+	table.append("<tr><th width='6%'>姓名</th><th width='10%'>身份证号</th><th width='7%'>手机号</th>");
+	table.append("<th width='8%'>商户订单号</th><th width='8%'>支付流水号</th><th width='8%'>保单号</th>");
+	table.append("<th width='8%'>保单开始时间</th><th width='8%'>保单结束时间</th><th width='14%'>订单商品</th>");
+	table.append("<th width='5%'>保费</th><th width='7%'>下单时间</th><th width='8%'>订单来源</th><th width='8%'>状态</th></tr>");
+		for (var i = page*10; i < billData.length; i++) {
+			if(i==(page*10+10)){
+				break;
+			}
+			table.append("<tr class=\"tr\"><tD>");
+			table.append(billData[i].NAME);
+			table.append("</td><tD>");
+			table.append(billData[i].CER_NO);
+			table.append("</td><tD>");
+			table.append(billData[i].MOBILE_NO);
+			table.append("</td><tD>");
+			table.append(billData[i].ORDER_NUMBER);
+			table.append("</td><tD>");
+			table.append(billData[i].PAYMENT_TRANS_NO.substring(0,14)+"<br>"+billData[i].PAYMENT_TRANS_NO.substring(14,28));
+			table.append("</td><tD>");
+			table.append(billData[i].POLICY_NO);
+			table.append("</td><tD>");
+			if(billData[i].POLICY_START_DATE!=null&&billData[i].POLICY_START_DATE!="")
+				table.append(billData[i].POLICY_START_DATE);
+			else
+				table.append(billData[i].FLIGHT_DATE);
+			table.append("</td><tD>");
+			if(billData[i].POLICY_END_DATE!=null&&billData[i].POLICY_END_DATE!="")
+				table.append(billData[i].POLICY_END_DATE);
+			else
+				table.append(billData[i].FLIGHT_NUMBER);
+			table.append("</td><tD>");
+			table.append(billData[i].PRODUCT_TITLE);
+			table.append("</td><tD>");
+			table.append(billData[i].AMOUNT);
+			table.append("</td><tD>");
+			table.append(billData[i].CREATE_DATE.substring(0,10)+"<br>"+billData[i].CREATE_DATE.substring(10,19));
+			table.append("</td><tD>");
+			// 订单来源
+			if(1 == billData[i].ORDER_TYPE) {
+				// 微信
+				table.append("微信");
+			} else if(2 == billData[i].ORDER_TYPE) {
+				// 支付宝
+				table.append("支付宝");
+			} else if(3 == billData[i].ORDER_TYPE) {
+				// ATM机
+				table.append("ATM机");
+			} else if(0 == billData[i].ORDER_TYPE) {
+				// 移动端
+				table.append("移动端");
+			}else if(5 == billData[i].ORDER_TYPE) {
+				// 东航PC端
+				table.append("东航PC端");
+			}else if(6 == billData[i].ORDER_TYPE) {
+				// 东航H5端
+				table.append("东航H5端");
+			}
+			table.append("</td><tD>");
+			if(billData[i].POLICY_NO !=""){
+				if(billData[i].STATE == 140){
+					table.append("已退款");
+				}else if(billData[i].STATE == 150){
+					table.append("已退保");
+				}else{
+					table.append("已承保");
+				}
+			}else{
+				if(billData[i].STATE == 110){
+					table.append("已支付");
+				}else if(billData[i].STATE == 100){
+					table.append("未支付");
+				}else if(billData[i].STATE == 120){
+					table.append("投保失败");
+				}else{
+					table.append("");
+				}
+			}
+			table.append("</td></tr>");
+		}
+		table.append("</table>");
+		table.append("<div class=\"page mt10\"><div class=\"pagination\"><ul>");
+		table.append("<li class=\"first-child\"><a href=\"#\" onclick=\"orderSearchflip(0);return false;\">首页</a></li>");
+		if(page==0){
+			table.append("<li class=\"disabled\"><span>上一页</span></li>");
+		}else{
+			table.append("<li><a href=\"#\" onclick=\"orderSearchflip("+(page-1)+");return false;\">上一页</a></li>");
+		}
+		if((page+1)*10>billData.length || (page+1)*10==billData.length){
+			table.append("<li class=\"disabled\"><span>下一页</span></li>");
+		}else{
+			table.append("<li><a href=\"#\" onclick=\"orderSearchflip("+(page+1)+");return false;\">下一页</a></li>");
+		}
+        table.append("<li class=\"disabled\"><span>共"+billData.length+"条记录</span></li></ul></div>");
+		var tableHTML = table.toString();
+		document.getElementById("tableDiv").innerHTML = tableHTML;
+}
+
+
+/**
+ * 加载累计里程查询
+ */
+function totalMileage() {
+	// 当前位置设定
+	$("#current_func").text("累计里程查询");
+	document.getElementById("main").innerHTML="<iframe name=\"right\" id=\"rightMain\" src=\"" + getLocationUrl()+"/admin/adminOrderSearch/totalMileage.json\" frameborder=\"no\" scrolling=\"auto\" width=\"100%\" height=\"auto\" allowtransparency=\"true\"></iframe>";
+}
+
+function totalMileageSearch(){
+	document.getElementById("searchForm").submit();
+}
+
+function totalMileageDetails(airlineComp,passengerCode,passengerName,orderNum){
+	document.getElementById("orderNum").value = orderNum;
+	document.getElementById("airlineComp").value = airlineComp;
+	document.getElementById("passengerCode").value = passengerCode;
+	document.getElementById("passengerName").value = passengerName;
+	document.getElementById("searchForm").action="admin/adminOrderSearch/totalMileageDetails.json";
+	document.getElementById("searchForm").submit();
+}
+
+function detailsSearch(){
+	document.getElementById("detailsForm").submit();
+}
+
+function policyErr(){
+	// 当前位置设定
+	$("#current_func").text("投保失败原因查询");
+	document.getElementById("main").innerHTML="<iframe name=\"right\" id=\"rightMain\" src=\"" + getLocationUrl()+"/admin/adminOrderSearch/policyErr.json\" frameborder=\"no\" scrolling=\"auto\" width=\"100%\" height=\"auto\" allowtransparency=\"true\"></iframe>";
+}
+
+function policyErrSearch(){
+	document.getElementById("searchForm").submit();
+}
+/**
+ * 东航查询订单详情
+ * @param number
+ * @constructor
+ */
+function CheckTheDetail(number){
+	$.ajax({
+		url:getLocationUrl()+"/admin/adminOrderSearch/OrderDetailed.json",
+		cache:false,
+		async:false,
+		data:{'number':number},
+		dataType:'json',
+		success:function (data) {
+			var oderState
+			switch(data.ORDER_STATE){
+				case 100:oderState='未支付'
+					break
+				case 110:oderState='已支付，投保中'
+					break
+				case 120:oderState='投保失败'
+					break
+				case 130:oderState='投保成功'
+					break
+				case 140:oderState='退款成功'
+					break
+				case 150:oderState='退保成功'
+					break
+			}
+			var payMethod
+			if(data.PAY_METHOD==1)
+				payMethod='支付宝'
+			else if(data.PAY_METHOD==2)
+				payMethod='微信'
+			else
+				payMethod='其它'
+			var cType
+			if(data.CER_TYPE==1)
+				cType='身份证'
+			if(data.CER_TYPE==3)
+				cType='护照'
+			var icType
+			if(data.INS_CER_TYPE==1)
+				icType='身份证'
+			if(data.INS_CER_TYPE==3)
+				icType='护照'
+
+			var oType
+			if(data.ORDER_TYPE==5)
+				oType='东航PC端'
+			else
+				oType='东航H5端'
+			$("#InsurancePolicyDetail").empty()
+			$("#InsurancePolicyDetail").append(
+				'<tr><td>保单号码</td><td>'+NullKiller(data.POLICY_NO)+'</td></tr>'+
+				'<tr><td>流水号</td><td>'+NullKiller(data.TRANS_NO)+'</td></tr>'+
+				'<tr><td>订单号码</td><td>'+NullKiller(data.ORDER_NUMBER)+'</td></tr>'+
+				'<tr><td>订单类型</td><td>'+NullKiller(oType)+'</td></tr>'+
+				'<tr><td>下单时间</td><td>'+NullKiller(data.CREATE_DATE)+'</td></tr>'+
+				'<tr><td>出单日期</td><td>'+NullKiller(data.ISSURED_TIME)+'</td></tr>'+
+				'<tr><td>电子保单URL</td><td>'+NullKiller(data.POLICY_URL)+'</td></tr>'+
+				'<tr><td>产品标题</td><td>'+NullKiller(data.PRODUCT_TITLE)+'</td></tr>'+
+				'<tr><td>产品类型</td><td>'+NullKiller(data.PRODUCT_TYPE)+'</td></tr>'+
+				'<tr><td>协议产品代码</td><td>'+NullKiller(data.PROTOCOL_CODE)+'</td></tr>'+
+				'<tr><td>投保人姓名</td><td>'+NullKiller(data.NAME)+'</td></tr>'+
+				'<tr><td>性别</td><td>'+NullKiller(data.GENDER)+'</td></tr>'+
+				'<tr><td>证件类型</td><td>'+NullKiller(cType)+'</td></tr>'+
+				'<tr><td>证件号码</td><td>'+NullKiller(data.CER_NO)+'</td></tr>'+
+				'<tr><td>投保人出生日期</td><td>'+NullKiller(data.BIRTHDAY)+'</td></tr>'+
+				'<tr><td>投保人手机号码</td><td>'+NullKiller(data.MOBILE_NO)+'</td></tr>'+
+				'<tr><td>投保人电子邮箱</td><td>'+NullKiller(data.MAIL_ADDR)+'</td></tr>'+
+				'<tr><td>被保人姓名</td><td>'+NullKiller(data.INS_NAME)+'</td></tr>'+
+				'<tr><td>被保人性别</td><td>'+NullKiller(data.INS_GENDER)+'</td></tr>'+
+				'<tr><td>被保人证件类型</td><td>'+NullKiller(icType)+'</td></tr>'+
+				'<tr><td>被保人证件号码</td><td>'+NullKiller(data.INS_CER_NO)+'</td></tr>'+
+				'<tr><td>被保人出生日期</td><td>'+NullKiller(data.INS_BIRTHDAY)+'</td></tr>'+
+				'<tr><td>被保人邮箱</td><td>'+NullKiller(data.INS_MAIL_ADDR)+'</td></tr>'+
+				'<tr><td>被保人手机号码</td><td>'+NullKiller(data.INS_MOBILE_NO)+'</td></tr>'+
+				'<tr><td>保险开始时间</td><td>'+NullKiller(data.POLICY_START_DATE)+'</td></tr>'+
+				'<tr><td>保险结束时间</td><td>'+NullKiller(data.POLICY_END_DATE)+'</td></tr>'+
+				'<tr><td>保障期限</td><td>'+NullKiller(data.POLICY_PERIOD)+'</td></tr>'+
+				'<tr><td>航班号</td><td>'+NullKiller(data.FLIGHT_NUMBER)+'</td></tr>'+
+				'<tr><td>航班日期</td><td>'+NullKiller(data.FLIGHT_DATE)+'</td></tr>'+
+				'<tr><td>签证国家</td><td>'+NullKiller(data.FUELNAME)+'</td></tr>'+
+				'<tr><td>签证日期</td><td>'+NullKiller(data.USEDATE)+'</td></tr>'+
+				'<tr><td>订单状态</td><td>'+oderState+'</td></tr>'+
+				'<tr><td>金额</td><td>'+NullKiller(data.AMOUNT)+'</td></tr>'+
+				'<tr><td>支付流水号</td><td>'+NullKiller(data.PAYMENT_TRANS_NO)+'</td></tr>'+
+				'<tr><td>支付时间</td><td>'+NullKiller(data.PAY_DATE)+'</td></tr>'+
+				'<tr><td>支付方式</td><td>'+payMethod+'</td></tr>'
+			)
+			$("#InsurancePolicyDetail tr").each(function () {
+				$(this).children().eq(0).css("text-align","center")
+			})
+			$("#HiddenInsurancePolicyDetail").show()
+		},
+		error:function(){
+			Dialog.alert('服务器无响应')
+		}
+	})
+}
+
+/**
+ * ATM订单详情
+ * @param number
+ * @constructor
+ */
+function CheckTheATMDetail(number){
+	$.ajax({
+		url:getLocationUrl()+"/admin/adminOrderSearch/ATMOrderDetailed.json",
+		cache:false,
+		async:false,
+		data:{'number':number},
+		dataType:'json',
+		success:function (data) {
+			var oderState
+			switch(data.ORDER_STATE){
+				case 100:oderState='未支付'
+					break
+				case 110:oderState='已支付，投保中'
+					break
+				case 120:oderState='投保失败'
+					break
+				case 130:oderState='投保成功'
+					break
+				case 140:oderState='退款成功'
+					break
+				case 150:oderState='退保成功'
+					break
+			}
+			var payMethod
+			if(data.PAY_METHOD==1)
+				payMethod='支付宝'
+			else
+				payMethod='微信'
+			var cType
+			if(data.CER_TYPE==1)
+				cType='身份证'
+			if(data.CER_TYPE==3)
+				cType='护照'
+			var icType
+			if(data.INS_CER_TYPE==1)
+				icType='身份证'
+			if(data.INS_CER_TYPE==3)
+				icType='护照'
+
+			var oType
+			if(data.ORDER_TYPE==3)
+				oType='ATM机'
+			$("#InsurancePolicyDetail").empty()
+			$("#InsurancePolicyDetail").append(
+				'<tr><td>保单号码</td><td>'+NullKiller(data.POLICY_NO)+'</td></tr>'+
+				'<tr><td>流水号</td><td>'+NullKiller(data.TRANS_NO)+'</td></tr>'+
+				'<tr><td>订单号码</td><td>'+NullKiller(data.ORDER_NUMBER)+'</td></tr>'+
+				'<tr><td>订单类型</td><td>'+NullKiller(oType)+'</td></tr>'+
+				'<tr><td>下单时间</td><td>'+NullKiller(data.CREATE_DATE)+'</td></tr>'+
+				'<tr><td>出单日期</td><td>'+NullKiller(data.ISSURED_TIME)+'</td></tr>'+
+				'<tr><td>电子保单URL</td><td>'+NullKiller(data.POLICY_URL)+'</td></tr>'+
+				'<tr><td>产品标题</td><td>'+NullKiller(data.PRODUCT_TITLE)+'</td></tr>'+
+				'<tr><td>产品类型</td><td>'+NullKiller(data.PRODUCT_TYPE)+'</td></tr>'+
+				'<tr><td>协议产品代码</td><td>'+NullKiller(data.PROTOCOL_CODE)+'</td></tr>'+
+				'<tr><td>投保人姓名</td><td>'+NullKiller(data.NAME)+'</td></tr>'+
+				'<tr><td>性别</td><td>'+NullKiller(data.GENDER)+'</td></tr>'+
+				'<tr><td>证件类型</td><td>'+NullKiller(cType)+'</td></tr>'+
+				'<tr><td>证件号码</td><td>'+NullKiller(data.CER_NO)+'</td></tr>'+
+				'<tr><td>投保人出生日期</td><td>'+NullKiller(data.BIRTHDAY)+'</td></tr>'+
+				'<tr><td>投保人手机号码</td><td>'+NullKiller(data.MOBILE_NO)+'</td></tr>'+
+				'<tr><td>投保人电子邮箱</td><td>'+NullKiller(data.MAIL_ADDR)+'</td></tr>'+
+				'<tr><td>被保人姓名</td><td>'+NullKiller(data.INS_NAME)+'</td></tr>'+
+				'<tr><td>被保人性别</td><td>'+NullKiller(data.INS_GENDER)+'</td></tr>'+
+				'<tr><td>被保人证件类型</td><td>'+NullKiller(icType)+'</td></tr>'+
+				'<tr><td>被保人证件号码</td><td>'+NullKiller(data.INS_CER_NO)+'</td></tr>'+
+				'<tr><td>被保人出生日期</td><td>'+NullKiller(data.INS_BIRTHDAY)+'</td></tr>'+
+				'<tr><td>被保人邮箱</td><td>'+NullKiller(data.INS_MAIL_ADDR)+'</td></tr>'+
+				'<tr><td>被保人手机号码</td><td>'+NullKiller(data.INS_MOBILE_NO)+'</td></tr>'+
+				'<tr><td>保险开始时间</td><td>'+NullKiller(data.POLICY_START_DATE)+'</td></tr>'+
+				'<tr><td>保险结束时间</td><td>'+NullKiller(data.POLICY_END_DATE)+'</td></tr>'+
+				'<tr><td>保障期限</td><td>'+NullKiller(data.POLICY_PERIOD)+'</td></tr>'+
+				'<tr><td>航班号</td><td>'+NullKiller(data.FLIGHT_NUMBER)+'</td></tr>'+
+				'<tr><td>航班日期</td><td>'+NullKiller(data.FLIGHT_DATE)+'</td></tr>'+
+				'<tr><td>签证国家</td><td>'+NullKiller(data.FUELNAME)+'</td></tr>'+
+				'<tr><td>签证日期</td><td>'+NullKiller(data.USEDATE)+'</td></tr>'+
+				'<tr><td>订单状态</td><td>'+oderState+'</td></tr>'+
+				'<tr><td>金额</td><td>'+NullKiller(data.AMOUNT)+'</td></tr>'+
+				'<tr><td>支付流水号</td><td>'+NullKiller(data.PAYMENT_TRANS_NO)+'</td></tr>'+
+				'<tr><td>支付时间</td><td>'+NullKiller(data.PAY_DATE)+'</td></tr>'+
+				'<tr><td>支付方式</td><td>'+payMethod+'</td></tr>'
+			)
+			$("#InsurancePolicyDetail tr").each(function () {
+				$(this).children().eq(0).css("text-align","center")
+			})
+			$("#HiddenInsurancePolicyDetail").show()
+		},
+		error:function(){
+			Dialog.alert('服务器无响应')
+		}
+	})
+}
+function hideTheDetail() {
+	$("#HiddenInsurancePolicyDetail").hide()
+}
+function NullKiller(str) {
+	if(str==null)
+		return ""
+	else
+		return str
+}

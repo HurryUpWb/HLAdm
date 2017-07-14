@@ -1,0 +1,319 @@
+<!doctype html>
+<meta http-equiv="x-ua-compatible" content="IE=EmulateIE10" xmlns:c="http://www.w3.org/1999/html">
+<html lang="zh-CN">
+
+<head>
+
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/main.css">
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/core.js"></script>
+    <script type="text/javascript" src="js/jquery.SuperSlide.js"></script>
+    <script type="text/javascript" src="js/colResizable-1.3.min.js"></script>
+    <script type="text/javascript" src="js/order.js"></script>
+    <script type="text/javascript" src="js/user.js"></script>
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/meeting_sign.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
+    <script type="text/javascript" src="js/mileage.js"></script>
+    <script type="text/javascript" src="js/zDrag.js"></script>
+    <script type="text/javascript" src="js/reward.js"></script>
+    <script type="text/javascript" src="js/zDialog.js"></script>
+    <script type="text/javascript" src="js/laydate/laydate.js"></script>
+    <!-- kongpc -->
+    <script type="text/javascript" src="js/settlement.js"></script>
+    <!-- kongpc -->
+    <script type="text/javascript" src="js/insure.js"></script>
+
+    <script type="text/javascript">
+
+
+        $(function () {
+
+            $(".sideMenu").slide({
+                titCell: "h3",
+                targetCell: "ul",
+                defaultIndex: 0,
+                effect: 'slideDown',
+                delayTime: '500',
+                trigger: 'click',
+                triggerTime: '150',
+                defaultPlay: true,
+                returnDefault: false,
+                easing: 'easeInQuint',
+                endFun: function () {
+                    scrollWW();
+                }
+            });
+            $(window).resize(function () {
+                scrollWW();
+
+            });
+        });
+        function scrollWW() {
+            if ($(".side").height() < $(".sideMenu").height()) {
+                $(".scroll").show();
+                var pos = $(".sideMenu ul:visible").position().top - 38;
+                $('.sideMenu').animate({top: -pos});
+            } else {
+                $(".scroll").hide();
+                $('.sideMenu').animate({top: 0});
+                n = 1;
+            }
+        }
+
+        var n = 1;
+        function menuScroll(num) {
+            var Scroll = $('.sideMenu');
+            var ScrollP = $('.sideMenu').position();
+            /*alert(n);
+             alert(ScrollP.top);*/
+            if (num == 1) {
+                Scroll.animate({top: ScrollP.top - 38});
+                n = n + 1;
+            } else {
+                if (ScrollP.top > -38 && ScrollP.top != 0) {
+                    ScrollP.top = -38;
+                }
+                if (ScrollP.top < 0) {
+                    Scroll.animate({top: 38 + ScrollP.top});
+                } else {
+                    n = 1;
+                }
+                if (n > 1) {
+                    n = n - 1;
+                }
+            }
+        }
+    </script>
+    <script type="text/javascript">
+        window.onload = function () {
+            GetSession();
+        };
+
+        function GetSession() {
+            $.ajax(
+                    {
+                        type: 'POST',
+                        url: getLocationUrl() + "/admin/adminUserLogin/GetSession.json",
+                        dataType: 'json',
+                        async: async,
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            if (XMLHttpRequest.status == 500) {
+                                alert('服务器内部错误.code:500.');
+                            } else if (XMLHttpRequest.status == 200) {
+                                alert('服务器内部错误.code:200.');
+                            }
+                        },
+                        success: function (data) {
+                            if (data.err == -1) {
+                                window.parent.location.href = "login.html";
+                            } else {
+                                var table = new StringBuffer();
+                                table.append(data.userName);
+                                var tableHTML = table.toString();
+                                document.getElementById("infocenter").innerHTML = tableHTML;
+
+                                if (data.accessFlag == 0) {
+                                    //无权限用户 客服？
+                                    $("#jf").hide();
+                                    $("#jl").hide();
+                                    $("#jd").hide();
+                                    $(".ZPReward").hide();
+                                    $("#at").hide();
+                                    $("#test").hide();
+                                    $(".Ceair").hide();
+                                    $(".BBG").hide();
+                                } else if (data.accessFlag == 2) {
+                                    //东航管理员
+                                    $("#jf").hide()
+                                    $("#jd").hide();
+                                    $(".NotCeair").hide()
+                                    $("#ts").hide()
+                                    $("#yj").hide()
+                                    $("#at").hide()
+                                    $("#test").hide();
+                                    $(".BBG").hide();
+                                }else if(data.accessFlag==3){
+                                    //ATM管理员
+                                    $(".NotCeair").hide();
+                                    $("#jf").hide();
+                                    $("#test").hide();
+                                    $("#jd").hide();
+                                    $("#ts").hide();
+                                    $("#yj").hide();
+                                    $("#dh1").hide();
+                                    $("#dh2").hide();
+                                    $("#ddcc").show();
+                                } else if (data.accessFlag == 4) {
+                                    //北部湾管理员
+                                    $("#jf").hide()
+                                    $("#jd").hide();
+                                    $(".NotCeair").hide();
+                                    $("#ts").hide();
+                                    $("#yj").hide();
+                                    $("#at").hide();
+                                    $("#test").hide();
+                                    $(".Ceair").hide()
+                                } else {
+                                    //超级管理员
+                                    $(".Ceair").hide()
+                                    $(".BBG").hide();
+                                }
+                            }
+                        },
+                    });
+        }
+
+
+        $(function () {
+            $(".list_table").colResizable({
+                liveDrag: true,
+                gripInnerHtml: "<div class='grip'></div>",
+                draggingClass: "dragging",
+                minWidth: 30
+            });
+
+        });
+    </script>
+
+    <style>
+        .buttonStyle {
+            width: 64px;
+            height: 22px;
+            line-height: 22px;
+            color: #369;
+            text-align: center;
+            background: url(images/buticon.gif) no-repeat left top;
+            border: 0;
+            font-size: 12px;
+        }
+
+        .buttonStyle:hover {
+            background: url(images/buticon.gif) no-repeat left -23px;
+        }
+    </style>
+    <title>嗨悠游后台管理系统</title>
+</head>
+<body>
+<div class="top">
+    <div id="top_t">
+        <div id="logo" class="fl"></div>
+        <div id="photo_info" class="fr">
+            <div id="photo" class="fl">
+                <a href="javascript:void();"><img src="images/a.png" alt=""
+                                                  width="60" height="60"></a>
+            </div>
+            <div id="base_info" class="fr">
+                <div class="help_info">
+                    <a href="javascript:out();" id="out">&nbsp;</a>
+                </div>
+                <div id="infocenter" class="info_center">
+                    admin
+                    <!-- <span id="nt">通知</span><span><a href="#"  id="notice">3</a></span> -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="side_here">
+        <div id="side_here_l" class="fl"></div>
+        <div id="here_area" class="fl">
+            当前位置：<span id="current_func"></span>
+        </div>
+    </div>
+</div>
+<div class="side" id="side">
+    <div class="sideMenu" style="margin:0 auto" id="sideMenu">
+        <h3 id="jf">签到管理</h3>
+        <ul id="test">
+            <!-- <li class="on" ><a href="javascript:SearchPoint();">集分宝签到查询</a></li>
+        <li><a href="javascript:sumSign();">集分宝签到统计</a></li> -->
+            <li><a href="javascript:loadMileageList();">里程签到查询</a></li>
+            <li><a href="javascript:meetingSignSearch();">会议签到查询</a></li>
+            <li><a href="javascript:awardSearch();">签到奖励设置</a></li>
+            <li><a href="javascript:awardSetting();">里程奖励设置</a></li>
+        </ul>
+        <h3 id="jl">产品管理</h3>
+        <ul id="product">
+            <li><a href="javascript:product();">产品信息配置</a></li>
+            <li class="NotCeair"><a href="javascript:productCatalog();">产品目录配置</a></li>
+            <li class="NotCeair"><a href="javascript:productExport();">国航E平台产品导出</a></li>
+        </ul>
+        <h3 id="jd">用户管理</h3>
+        <ul>
+            <li><a href="javascript:loadUserMessageList();">用户信息查询</a></li>
+        </ul>
+        <h3 id="dd">订单管理</h3>
+        <ul>
+            <li class="NotCeair"><a href="javascript:loadOrderList();">订单查询</a></li>
+            <li class="NotCeair" id="ddcc"><a href="javascript:loadATMOrderList();">ATM订单查询</a></li>
+            <li class="Ceair"><a href="javascript:loadMuOrderList();">东航订单查询</a></li>
+            <li class="Ceair"><a href="javascript:loadCancelOrder();">东航退保退款</a></li>
+            <li class="BBG"><a href="javascript:loadBbgOrderList();">北部湾订单查询</a></li>
+            <li class="BBG"><a href="javascript:bbgLoadCancelOrder();">北部湾退保退款</a></li>
+            <li class="NotCeair"><a href="javascript:totalMileage();">累计里程查询</a></li>
+            <li class="NotCeair"><a href="javascript:policyErr();">投保失败查询</a></li>
+            <!--<li><a href="javascript:loadUserList();">用户查询</a></li>-->
+            <!-- <li><a href="javascript:plicySearch();">保单查询</a></li> -->
+        </ul>
+        <h3 id="ts">投保管理</h3>
+        <ul>
+            <li><a href="javascript:loadCancelH5Order();">H5退保</a></li>
+            <li><a href="javascript:insurePush();">投保推送</a></li>
+        </ul>
+        <h3 id="yj">摇奖管理</h3>
+        <ul>
+            <li class="ZPReward"><a href="javascript:getAllZPRewardConfig();">转盘摇奖配置</a></li>
+            <li><a href="javascript:getAllZPRewardRec();">转盘摇奖查询</a></li>
+        </ul>
+        <h3 id="at">ATM管理</h3>
+        <ul>
+            <li><a href="javascript:atmStatus();">ATM状态查询</a></li>
+            <li><a href="javascript:loadSettlementList();">销售数据查询</a></li>
+            <li><a href="javascript:getATMDataRec();">月账单查询</a></li>
+        </ul>
+        <!-- <h3 id="jd">系统管理</h3>
+        <ul id="indent">
+            <li><a href="javascript:mstInfo();">基础属性配置</a></li>
+        </ul> -->
+    </div>
+</div>
+<div class="main" id="main">
+    <div class="container">
+        <!-- <div id="button" class="mt10">
+    <input type="button"  disabled="disabled" onclick="AutomateExcel();" name="button" class="btn btn82 btn_export" value="导出">
+    </div>
+    <div id="search_bar" class="mt10">
+        <div id="table" class="mt10">
+            <div id="tableDiv" style="height:400px;">
+                <table id="data" width="100%" border="0" cellpadding="0" cellspacing="0" class="list_table">
+                    <tr>
+                        <th width="15%">ID</th>
+                        <th width="15%">支付宝账号</th>
+                        <th width="15%">支付宝账户开户姓名</th>
+                        <th width="15%">支付宝预留手机号</th>
+                        <th width="15%">每次签到获得集分宝</th>
+                        <th width="15%">签到时间</th>
+                        </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+*/
+ -->
+    </div>
+</div>
+<div class="bottom">
+    <div id="bottom_bg">版权</div>
+</div>
+<div class="scroll">
+    <a href="javascript:;" class="per" title="使用鼠标滚轴滚动侧栏"
+       onclick="menuScroll(1);"></a> <a href="javascript:;" class="next"
+                                        title="使用鼠标滚轴滚动侧栏" onclick="menuScroll(2);"></a>
+</div>
+<div id="forlogin" class="box_center" style="display:none"></div>
+</body>
+</html>
+
